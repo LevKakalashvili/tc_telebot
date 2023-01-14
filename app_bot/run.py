@@ -1,6 +1,7 @@
 import logging
 
 from aiogram import Bot, Dispatcher, executor, types
+
 from app_bot.config import Config as AppConfig
 from app_bot.utils import screenshot_maker as scm
 
@@ -12,7 +13,7 @@ dp = Dispatcher(bot)
 
 @dp.message_handler(commands=["start", "help"])
 async def send_welcome(message: types.Message):
-    await message.answer("Введите url.")
+    await message.answer("Введите url в формате:\nhttps://url, http://url.")
 
 
 @dp.message_handler()
@@ -21,7 +22,7 @@ async def echo(message: types.Message):
         await message.answer_document(open(scm.file, mode="rb"))
         await message.answer(f"Код ответа: {scm.status_code}")
     else:
-        await message.answer(f"{scm.message}:\n{message.text}")
+        await message.answer(f"{scm.message}")
 
 
 if __name__ == "__main__":
