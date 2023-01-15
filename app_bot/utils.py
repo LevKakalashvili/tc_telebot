@@ -70,7 +70,7 @@ class Screenshot:
         try:
             self._web_driver.get(url)
         except WebDriverException:
-            self.message += "\n\nUrl должен быть в формате:\n https://url\nhttp://url"
+            self.message += "\n\nАдрес сайта (url) должен быть в формате:\nhttps://url\nhttp://url"
             return False
 
         filename = os.path.join(
@@ -85,18 +85,18 @@ class Screenshot:
             return True
         return False
 
-    def __get_status_code(self, url: str):
-        for entry in self._web_driver.get_log("performance"):
-            for key, value in entry.items():
-                if key == "message" and "status" in value:
-                    msg = json.loads(value)["message"]["params"]
-                    for mes_key, mes_val in msg.items():
-                        if mes_key == "response":
-                            response_url = mes_val.get("url")
-                            response_status = mes_val.get("status")
-                            if url in response_url:
-                                self.status_code = response_status
-                                return None
+    def __get_status_code(self, url: str) -> int:
+        responses = []
+        perf_log = self._web_driver.get_log('performance')
+        for log_index in range(len(perf_log)):
+            log_message = json.loads(perf_log[log_index]["message"])["message"]
+            if log_message["method"] == "Network.responseReceived":
+                responses.append(log_message["params"]["response"])
+                if log_message["params"]["response"]["url"] == url:
+                    response = log_message["params"]["response"]
+                    self.status_code = response["status"]
+                    return self.status_code
+        return -1
 
 
 screenshot_maker = Screenshot()
