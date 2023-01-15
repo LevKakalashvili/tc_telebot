@@ -9,7 +9,7 @@ from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager  # type: ignore
 
-from app_bot.config import Config as AppConfig
+from config import Config as AppConfig
 
 
 class Screenshot:

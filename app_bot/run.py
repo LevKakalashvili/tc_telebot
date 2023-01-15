@@ -2,8 +2,8 @@ import logging
 
 from aiogram import Bot, Dispatcher, executor, types
 
-from app_bot.config import Config as AppConfig
-from app_bot.utils import screenshot_maker as scm
+from config import Config as AppConfig
+from utils import screenshot_maker as scm
 
 logging.basicConfig(level=logging.INFO)
 
