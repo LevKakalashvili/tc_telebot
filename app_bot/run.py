@@ -13,7 +13,7 @@ dp = Dispatcher(bot)
 
 @dp.message_handler(commands=["start", "help"])
 async def send_welcome(message: types.Message):
-    await message.answer("Введите url в формате:\nhttps://url, http://url.")
+    await message.answer("Введите адрес сайта (url) в формате:\nhttps://url\nhttp://url")
 
 
 @dp.message_handler()
