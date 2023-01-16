@@ -47,10 +47,12 @@ class Screenshot:
 
     @staticmethod
     def __reformat_url(filename: str) -> str:
+        invalid_chars = ""
         if os.name == "nt":
             invalid_chars = r"\/:*?<>|"
-            return "".join(char for char in filename if char not in invalid_chars)
-        return filename
+        elif os.name == "posix":
+            invalid_chars = r"/"
+        return "".join(char for char in filename if char not in invalid_chars)
 
     def make_sreeenshot(self, url: str) -> bool:
         """Делает скриншот страницы.
