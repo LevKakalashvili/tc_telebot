@@ -3,13 +3,14 @@ import datetime
 import json
 import os
 
+from config import Config as AppConfig
 from selenium import webdriver
 from selenium.common import WebDriverException
 from selenium.webdriver import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options
 from webdriver_manager.chrome import ChromeDriverManager  # type: ignore
 
-from config import Config as AppConfig
+invalid_chars = {"nt": r"\/:*?<>|", "posix": r"/"}
 
 
 class Screenshot:
@@ -47,24 +48,21 @@ class Screenshot:
 
     @staticmethod
     def __reformat_url(filename: str) -> str:
-        invalid_chars = ""
-        if os.name == "nt":
-            invalid_chars = r"\/:*?<>|"
-        elif os.name == "posix":
-            invalid_chars = r"/"
-        return "".join(char for char in filename if char not in invalid_chars)
+        return "".join(
+            char for char in filename if char not in invalid_chars.get(os.name, "")
+        )
 
     def make_sreeenshot(self, url: str) -> bool:
         """Делает скриншот страницы.
 
-            :return: True если скриншот создан, False в противном случае.
+        :return: True если скриншот создан, False в противном случае.
         """
-        if self.__get_screenshot(url):
-            self.__get_status_code(url)
+        if self.get_screenshot(url):
+            self.get_status_code(url)
             return True
         return False
 
-    def __get_screenshot(self, url: str) -> bool:
+    def get_screenshot(self, url: str) -> bool:
         self.file = ""
         self.status_code = -1
         self.message = f"Не удалось создать скриншот для url:\n{url}"
@@ -72,7 +70,9 @@ class Screenshot:
         try:
             self._web_driver.get(url)
         except WebDriverException:
-            self.message += "\n\nАдрес сайта (url) должен быть в формате:\nhttps://url\nhttp://url"
+            self.message += (
+                "\n\nАдрес сайта (url) должен быть в формате:\nhttps://url\nhttp://url"
+            )
             return False
 
         filename = os.path.join(
@@ -87,9 +87,9 @@ class Screenshot:
             return True
         return False
 
-    def __get_status_code(self, url: str) -> int:
+    def get_status_code(self, url: str) -> int:
         responses = []
-        perf_log = self._web_driver.get_log('performance')
+        perf_log = self._web_driver.get_log("performance")
         for log_index in range(len(perf_log)):
             log_message = json.loads(perf_log[log_index]["message"])["message"]
             if log_message["method"] == "Network.responseReceived":
