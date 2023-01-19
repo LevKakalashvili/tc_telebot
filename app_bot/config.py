@@ -6,7 +6,9 @@ load_dotenv()
 
 scr_folder = os.getenv("SCREENSHOT_FOLDER")
 
-if not scr_folder or scr_folder is None:
+if scr_folder is None or not scr_folder:
+    if not os.path.isdir("screenshots_default"):
+        os.mkdir("screenshots_default")
     scr_folder = os.path.join(os.getcwd(), "screenshots_default")
 
 
