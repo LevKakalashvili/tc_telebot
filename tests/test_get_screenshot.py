@@ -34,7 +34,7 @@ def test_get_screenshot(url, expected_result):
         ),
         (
             "https://yandex.ru/search/?from=chromesearch&clid=2196598&text=wildberries&lr=11083",
-            Screenshot().reformat_url(
+            Screenshot().convert_url_to_filename(
                 "https://yandex.ru/search/?from=chromesearch&clid=2196598&text=wildberries&lr=11083"
             ),
         ),
