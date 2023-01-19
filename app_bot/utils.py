@@ -3,7 +3,7 @@ import datetime
 import json
 import os
 
-from .config import Config as AppConfig
+from config import Config as AppConfig
 from selenium import webdriver
 from selenium.common import WebDriverException
 from selenium.webdriver import DesiredCapabilities
@@ -16,7 +16,12 @@ invalid_chars = {"nt": r"\/:*?<>|", "posix": r"/"}
 class Screenshot:
     """Класс для создания скриншотов web-страниц."""
 
-    def __init__(self):
+    def __init__(self, app_config: AppConfig = None):
+        if app_config is None:
+            self.app_config = AppConfig()
+        else:
+            self.app_config = app_config
+
         options = Options()
         options.headless = True
         options.add_argument("--disable-extensions")
@@ -32,13 +37,9 @@ class Screenshot:
             desired_capabilities=capabilities,
         )
         self._web_driver.set_window_size(
-            AppConfig.SCREENSHOT_RESOLUTION_WIDTH,
-            AppConfig.SCREENSHOT_RESOLUTION_HEIGHT,
+            self.app_config.SCREENSHOT_RESOLUTION_WIDTH,
+            self.app_config.SCREENSHOT_RESOLUTION_HEIGHT,
         )
-
-        self.file = ""
-        self.status_code = 0
-        self.message = ""
 
     @staticmethod
     def reformat_datetime_string(datetime_str: str) -> str:
@@ -47,58 +48,75 @@ class Screenshot:
         return datetime_str
 
     @staticmethod
-    def reformat_url(filename: str) -> str:
+    def convert_url_to_filename(filename: str) -> str:
         return "".join(
             char for char in filename if char not in invalid_chars.get(os.name, "")
         )
 
-    def make_sreeenshot(self, url: str) -> bool:
+    def make_sreeenshot(self, url: str) -> tuple[bool, dict]:
+        """Делает скриншот страницы и получает статус ответа от запрошенной страницы.
+
+        :return: (success, result)
+        success - True если скриншот создан, False в противном случае.
+        result - {
+        file - имя созданного файла,
+        status_code - код ответа страницы
+        message - сообщение
+        }
+        """
+        success, result = self.get_screenshot(url)
+        if success:
+            code = self.get_status_code(url)
+            result["status_code"] = "Unknown" if code <= 0 else code
+            return True, result
+        return False, result
+
+    def get_screenshot(self, url: str) -> tuple[bool, dict]:
         """Делает скриншот страницы.
 
-        :return: True если скриншот создан, False в противном случае.
+        :return: (success, result)
+        success - True если скриншот создан, False в противном случае.
+        result - {
+        file - имя созданного файла,
+        message - сообщение
+        }
         """
-        if self.get_screenshot(url):
-            self.get_status_code(url)
-            return True
-        return False
-
-    def get_screenshot(self, url: str) -> bool:
-        self.file = ""
-        self.status_code = -1
-        self.message = f"Не удалось создать скриншот для url:\n{url}"
+        result = {"file": "", "message": f"Не удалось создать скриншот для url:\n{url}"}
 
         try:
             self._web_driver.get(url)
         except WebDriverException:
-            self.message += (
-                "\n\nАдрес сайта (url) должен быть в формате:\nhttps://url\nhttp://url"
-            )
-            return False
+            result[
+                "message"
+            ] = "\n\nАдрес сайта (url) должен быть в формате:\nhttps://url\nhttp://url"
+            return False, result
 
         filename = os.path.join(
-            AppConfig.SCREENSHOT_FOLDER,
+            self.app_config.SCREENSHOT_FOLDER,
             f'{self.reformat_datetime_string(datetime.datetime.now().strftime("%Y-%m-%d_%H:%M"))}_'
-            f"{self.reformat_url(url)}.png",
+            f"{self.convert_url_to_filename(url)}.png",
         )
         if self._web_driver.save_screenshot(filename):
-            self.file = filename
-            self.status_code = 0
-            self.message = ""
-            return True
-        return False
+            result["file"] = filename
+            result["message"] = ""
+            return True, result
+        return False, result
 
     def get_status_code(self, url: str) -> int:
+        """Возвращает код ответа от url"""
         responses = []
         perf_log = self._web_driver.get_log("performance")
         for log_index in range(len(perf_log)):
             log_message = json.loads(perf_log[log_index]["message"])["message"]
-            if log_message["method"] == "Network.responseReceived":
-                responses.append(log_message["params"]["response"])
-                if log_message["params"]["response"]["url"] == url:
-                    response = log_message["params"]["response"]
-                    self.status_code = response["status"]
-                    return self.status_code
+            if log_message["method"] != "Network.responseReceived":
+                continue
+            responses.append(log_message["params"]["response"])
+
+            if log_message["params"]["response"]["url"] != url:
+                continue
+            response = log_message["params"]["response"]
+            return response["status"]
         return -1
 
 
-screenshot_maker = Screenshot()
+screenshot_maker = Screenshot(app_config=AppConfig())
