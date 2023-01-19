@@ -71,7 +71,7 @@ class Screenshot:
             return True, result
         return False, result
 
-    def get_screenshot(self, url: str) -> tuple[bool, dict]:
+    def get_screenshot(self, url: str, filename: str) -> tuple[bool, dict]:
         """Делает скриншот страницы.
 
         :return: (success, result)
@@ -90,12 +90,12 @@ class Screenshot:
                 "message"
             ] = "\n\nАдрес сайта (url) должен быть в формате:\nhttps://url\nhttp://url"
             return False, result
-
-        filename = os.path.join(
-            self.app_config.SCREENSHOT_FOLDER,
-            f'{self.reformat_datetime_string(datetime.datetime.now().strftime("%Y-%m-%d_%H:%M"))}_'
-            f"{self.convert_url_to_filename(url)}.png",
-        )
+        if not filename:
+            filename = os.path.join(
+                self.app_config.SCREENSHOT_FOLDER,
+                f'{self.reformat_datetime_string(datetime.datetime.now().strftime("%Y-%m-%d_%H:%M"))}_'
+                f"{self.convert_url_to_filename(url)}.png",
+            )
         if self._web_driver.save_screenshot(filename):
             result["file"] = filename
             result["message"] = ""
