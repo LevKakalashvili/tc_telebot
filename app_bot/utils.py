@@ -64,7 +64,7 @@ class Screenshot:
         message - сообщение
         }
         """
-        success, result = self.get_screenshot(url)
+        success, result = self.get_screenshot(url, "")
         if success:
             code = self.get_status_code(url)
             result["status_code"] = "Unknown" if code <= 0 else code
