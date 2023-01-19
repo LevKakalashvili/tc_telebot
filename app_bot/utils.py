@@ -3,7 +3,7 @@ import datetime
 import json
 import os
 
-from config import Config as AppConfig
+from .config import Config as AppConfig
 from selenium import webdriver
 from selenium.common import WebDriverException
 from selenium.webdriver import DesiredCapabilities
@@ -41,13 +41,13 @@ class Screenshot:
         self.message = ""
 
     @staticmethod
-    def __reformat_datetime_string(datetime_str: str) -> str:
+    def reformat_datetime_string(datetime_str: str) -> str:
         if os.name == "nt":
             return datetime_str.replace(":", "-")
         return datetime_str
 
     @staticmethod
-    def __reformat_url(filename: str) -> str:
+    def reformat_url(filename: str) -> str:
         return "".join(
             char for char in filename if char not in invalid_chars.get(os.name, "")
         )
@@ -77,8 +77,8 @@ class Screenshot:
 
         filename = os.path.join(
             AppConfig.SCREENSHOT_FOLDER,
-            f'{self.__reformat_datetime_string(datetime.datetime.now().strftime("%Y-%m-%d_%H:%M"))}_'
-            f"{self.__reformat_url(url)}.png",
+            f'{self.reformat_datetime_string(datetime.datetime.now().strftime("%Y-%m-%d_%H:%M"))}_'
+            f"{self.reformat_url(url)}.png",
         )
         if self._web_driver.save_screenshot(filename):
             self.file = filename
