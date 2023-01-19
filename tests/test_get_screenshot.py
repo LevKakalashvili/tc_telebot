@@ -1,6 +1,5 @@
-import os
-
 from app_bot.utils import Screenshot
+from app_bot.config import Config as AppConfig
 
 import pytest
 
@@ -8,41 +7,23 @@ import pytest
 @pytest.mark.parametrize(
     "url, expected_result",
     [
-        # ("1234", False),
-        # (123, False),
-        # ("ya.ru", False),
-        # ("www.ya.ru", False),
-        # ("", False),
+        ("1234", (False, {"file": "", "message": "\n\nАдрес сайта (url) должен быть в формате:\nhttps://url\nhttp://url"})),
+        (123, (False, {"file": "", "message": "\n\nАдрес сайта (url) должен быть в формате:\nhttps://url\nhttp://url"})),
+        ("ya.ru", (False, {"file": "", "message": "\n\nАдрес сайта (url) должен быть в формате:\nhttps://url\nhttp://url"})),
+        ("www.ya.ru", (False, {"file": "", "message": "\n\nАдрес сайта (url) должен быть в формате:\nhttps://url\nhttp://url"})),
+        ("", (False, {"file": "", "message": "\n\nАдрес сайта (url) должен быть в формате:\nhttps://url\nhttp://url"})),
         (
             "https://yandex.ru/search/?from=chromesearch&clid=2196598&text=wildberries&lr=11083",
-            True,
+            (True, {"file": "File.png", "message": ""}),
         ),
     ],
 )
 def test_get_screenshot(url, expected_result):
-    test_screenshot_maker = Screenshot()
+    test_screenshot_maker = Screenshot(app_config=AppConfig())
+    assert test_screenshot_maker.get_screenshot(url, "File.png") == expected_result
 
-    assert test_screenshot_maker.get_screenshot(url) == expected_result
 
 
-@pytest.mark.parametrize(
-    "url, expected_result",
-    [
-        (
-            "https://yandex.ru/search/?from=chromesearch&clid=2196598&text=wildberries&lr=11083",
-            True,
-        ),
-        (
-            "https://yandex.ru/search/?from=chromesearch&clid=2196598&text=wildberries&lr=11083",
-            Screenshot().convert_url_to_filename(
-                "https://yandex.ru/search/?from=chromesearch&clid=2196598&text=wildberries&lr=11083"
-            ),
-        ),
-    ],
-)
-def test_get_screenshot_check_file(url, expected_result):
-    test_screenshot_maker = Screenshot()
-    test_screenshot_maker.get_screenshot(url)
-    scr_folder = os.path.isdir(os.path.join(os.getcwd(), "screenshots_default"))
-    assert scr_folder == expected_result
-    # assert test_screenshot_maker.file == expected_result
+
+
+
